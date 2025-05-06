@@ -1,0 +1,131 @@
+from panda3d.core import WindowProperties
+from panda3d.core import Vec3
+from math import sin,cos,radians
+class Hero():
+    def __init__(self,pos,land):
+        self.land=land
+        self.hero=loader.loadModel('smiley')
+        self.hero.reparentTo(render)
+        self.hero.setScale(0.3)
+        self.hero.setPos(pos)
+        self.hero.setColor(0.94,0.95,0.26,1)
+        self.camera_bind()
+        self.isfirstplace=True
+        self.acceptevents()
+        self.speed=0.3
+        self.key_map={'forward':False,'back':False,'left':False,'right':False}
+        taskMgr.add(self.update_movement,'apd_m')
+        self.prepareMouse()
+        self.gradus=self.hedding
+        
+    def camera_bind1(self):
+        self.isfirstplace=False
+        base.disableMouse()
+        base.camera.setH(180)
+        base.camera.reparentTo(self.hero)
+        base.camera.setPos(0,0,1)
+
+    def camera_bind(self):
+        self.isfirstplace=True
+        base.disableMouse()
+        base.camera.setH(180)
+        base.camera.reparentTo(self.hero)
+        base.camera.setPos(0,9,3)
+
+
+    def perekluchalka(self):
+        if self.isfirstplace==True:
+            self.camera_bind1()
+        else:
+            self.camera_bind()
+    def acceptevents(self):
+        
+        base.accept('v', self.perekluchalka)
+        base.accept('w', self.forward)
+        base.accept('w-up', self.forwardUp)
+
+        base.accept('s', self.back)
+        base.accept('s-up', self.backUp)
+
+        base.accept('d', self.right)
+        base.accept('d-up', self.rightUp)
+
+        base.accept('a', self.left)
+        base.accept('a-up', self.leftUp)
+    
+    
+    def forward(self):
+        self.update_key('forward',True)
+    def back(self):
+        self.update_key('back',True)
+    def right(self):
+        self.update_key('right',True)
+    def left(self):
+        self.update_key('left',True)
+
+
+
+    def forwardUp(self):
+        self.update_key('forward',False)
+    def backUp(self):
+        self.update_key('back',False)
+    def rightUp(self):
+        self.update_key('right',False)
+    def leftUp(self):
+        self.update_key('left',False)
+
+
+
+    def update_movement(self,task):
+        dt=globalClock.getDt()
+        hedding=self.hero.getH()
+        rad=radians(hedding)
+        direction=Vec3(0,0,0)
+        
+        if self.key_map['forward']:
+            # if self.hedding<-45 and self.hedding>-135:
+            #     self.hero.setX(self.hero.getX()-self.speed)
+            # else:
+            #     self.hero.setY(self.hero.getY()-self.speed)
+            direction+=Vec3(sin(rad),cos(rad),0)        
+        if self.key_map['right']:
+            direction+=Vec3(sin(rad+radians(90)),cos(rad+radians(90)),0)        
+
+            # self.hero.setX(self.hero.getX()-self.speed)
+        if self.key_map['back']:
+            # self.hero.setY(self.hero.getY()+self.speed)
+            direction-=Vec3(sin(rad),cos(rad),0)
+        if self.key_map['left']:
+            direction+=Vec3(sin(rad-radians(90)),cos(rad-radians(90)),0)        
+
+            # self.hero.setX(self.hero.getX()+self.speed)
+        direction.normalize()
+        self.hero.setPos(self.hero.getPos()+direction*self.speed)
+        return task.cont
+    def update_key(self,key,value):
+        self.key_map[key]=value
+
+    def prepareMouse(self):
+        wp=WindowProperties()
+        wp.setCursorHidden(True)
+        wp.setMouseMode(WindowProperties.M_relative)
+        base.win.requestProperties(wp)
+
+        self.centerX=base.win.getXSize()/2
+        self.centerY=base.win.getYSize()/2
+        self.sensitive=0.3
+        self.hedding=0
+        taskMgr.add(self.update_camera,'app_k')
+    
+    def update_camera(self,task):
+        if base.mouseWatcherNode.hasMouse():
+            self.pointer=base.win.getPointer(0)
+            x=self.pointer.getX()
+            y=self.pointer.getY()
+            dx=x-self.centerX
+            self.hedding-=dx*self.sensitive
+            self.hedding=self.hedding %360
+            print(self.hedding)
+            self.hero.setH(self.hedding)
+            base.win.movePointer(0,int(self.centerX),int(self.centerY))
+        return task.cont
