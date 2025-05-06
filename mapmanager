@@ -1,0 +1,55 @@
+class Mapmanager():
+    
+    def __init__(self):
+        self.start_new()
+        self.load_models()
+        self.init_map()
+    
+    def load_models(self):
+        self.block=loader.loadModel('block.egg')
+        self.texture=loader.loadTexture('textur-gas-kvas-com-q0wi-p-teksturi-zeml-1.jpg')
+        self.block.setTexture(self.texture)
+        self.map_file_name='map.txt'
+
+        self.block1=loader.loadModel('block.egg')
+        self.texture1=loader.loadTexture('stone.png')
+        self.block1.setTexture(self.texture1)
+    
+    def init_map(self):
+        try:
+            with open(self.map_file_name,'r') as file:
+                
+                data=file.read()
+                if data=='':
+                    self.generate_map()        
+                    
+                else:    
+                    self.build_map()
+        except:
+            self.generate_map()
+            
+
+    
+    def start_new(self):
+        self.land=render.attachNewNode('land')
+    
+    def add_block(self,x,y,z):
+        if z<3:
+            self.new_block=self.block1.copyTo(self.land)
+        else:
+            self.new_block=self.block.copyTo(self.land)
+        self.new_block.setPos(x,y,z)
+    
+    def generate_map(self):
+        with open(self.map_file_name,'w') as file:
+            for x in range(100):
+                for y in range(100):
+                    for z in range(5):
+                        file.write(f'{x},{y},{z}\n')
+        self.build_map()
+    
+    def build_map(self):
+        with open(self.map_file_name,'r') as file:
+            for i in file:
+                spisok=i.split(',')
+                self.add_block(int(spisok[0]),int(spisok[1]),int(spisok[2]))
